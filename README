@@ -1,0 +1,66 @@
+IB-Ruby: Ruby implementation of the Interactive Brokers' TWS API.
+Copyright (C) 2006 Blue Voodoo Magic LLC.
+By Paul Legato (pjlegato@bluevoodoomagic.com)
+
+== License
+This library is free software; you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation; either version 2.1 of the
+License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301 USA
+
+== Use At Your Own Risk 
+
+As the license indicates, this code is provided AS IS, WITH NO
+WARRANTY WHATSOEVER, not even an implied warranty of merchantability
+or fitness for a particular purpose. *ANY USE YOU MAKE OF THIS CODE IS
+ENTIRELY AT YOUR OWN RISK.* This code may contain any number of errors
+or bugs, both known and unknown. Use of this code for live trading may
+result in monetary loss due to known or unknown bugs. In no event
+shall the author be liable or responsible for any loss whatsoever,
+direct or indirect, that may occur as a result of your use of this
+code.
+
+
+== Overview
+
+This provides a Ruby interface to the Interactive Brokers' Trader
+Workstation API (http://www.interactivebrokers.com/). This code is not
+sanctioned or endorsed by IB.
+
+== Status of this release 
+
+This is an alpha test quality release. I specifically DO NOT recommend
+that it be used for live trading under any circumstances. It has not
+been tested. I am releasing it in the hopes that the many eyes of the
+community will help with enhancing it, so that we all will have a
+robust and reliable library to use.
+
+Though the message sender module exists, there isn't a programmatic
+interface for sending messages yet. Coming soon.
+
+
+== Use
+First, start up TWS and set it to allow connections from localhost.
+
+Then:
+
+   require 'ib'
+
+   ib = IB::IB.new()
+
+You should see messages flash by displaying the startup messages
+received from TWS.
+
+
+== Revision history
+11/23/06 - 0.1 - alpha release
