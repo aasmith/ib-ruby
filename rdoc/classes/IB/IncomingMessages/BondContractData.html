@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>Class: IB::IncomingMessages::BondContractData</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <meta http-equiv="Content-Script-Type" content="text/javascript" />
+  <link rel="stylesheet" href="../../.././rdoc-style.css" type="text/css" media="screen" />
+  <script type="text/javascript">
+  // <![CDATA[
+
+  function popupCode( url ) {
+    window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+  }
+
+  function toggleCode( id ) {
+    if ( document.getElementById )
+      elem = document.getElementById( id );
+    else if ( document.all )
+      elem = eval( "document.all." + id );
+    else
+      return false;
+
+    elemStyle = elem.style;
+    
+    if ( elemStyle.display != "block" ) {
+      elemStyle.display = "block"
+    } else {
+      elemStyle.display = "none"
+    }
+
+    return true;
+  }
+  
+  // Make codeblocks hidden by default
+  document.writeln( "<style type=\"text/css\">div.method-source-code { display: none }</style>" )
+  
+  // ]]>
+  </script>
+
+</head>
+<body>
+
+
+
+    <div id="classHeader">
+        <table class="header-table">
+        <tr class="top-aligned-row">
+          <td><strong>Class</strong></td>
+          <td class="class-name-in-header">IB::IncomingMessages::BondContractData</td>
+        </tr>
+        <tr class="top-aligned-row">
+            <td><strong>In:</strong></td>
+            <td>
+                <a href="../../../files/messages_rb.html">
+                messages.rb
+                </a>
+        <br />
+            </td>
+        </tr>
+
+        <tr class="top-aligned-row">
+            <td><strong>Parent:</strong></td>
+            <td>
+                <a href="AbstractMessage.html">
+                AbstractMessage
+               </a>
+            </td>
+        </tr>
+        </table>
+    </div>
+  <!-- banner header -->
+
+  <div id="bodyContent">
+
+
+
+  <div id="contextContent">
+
+
+
+   </div>
+
+    <div id="method-list">
+      <h3 class="section-bar">Methods</h3>
+
+      <div class="name-list">
+      <a href="#M000044">load</a>&nbsp;&nbsp;
+      <a href="#M000043">message_id</a>&nbsp;&nbsp;
+      </div>
+    </div>
+
+  </div>
+
+
+    <!-- if includes -->
+
+    <div id="section">
+
+
+
+
+
+    <div id="attribute-list">
+      <h3 class="section-bar">Attributes</h3>
+
+      <div class="name-list">
+        <table>
+        <tr class="top-aligned-row context-row">
+          <td class="context-item-name">contract_details</td>
+          <td class="context-item-value">&nbsp;[RW]&nbsp;</td>
+          <td class="context-item-desc"></td>
+        </tr>
+        </table>
+      </div>
+    </div>
+      
+
+
+    <!-- if method_list -->
+    <div id="methods">
+      <h3 class="section-bar">Public Class methods</h3>
+
+      <div id="method-M000043" class="method-detail">
+        <a name="M000043"></a>
+
+        <div class="method-heading">
+          <a href="#M000043" class="method-signature">
+          <span class="method-name">message_id</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000043-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000043-source">
+<pre>
+      <span class="ruby-comment cmt"># File messages.rb, line 1134</span>
+1134:       <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">message_id</span>
+1135:         <span class="ruby-value">18</span>
+1136:       <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="section-bar">Public Instance methods</h3>
+
+      <div id="method-M000044" class="method-detail">
+        <a name="M000044"></a>
+
+        <div class="method-heading">
+          <a href="#M000044" class="method-signature">
+          <span class="method-name">load</span><span class="method-args">()</span>
+          </a>
+        </div>
+      
+        <div class="method-description">
+          <p><a class="source-toggle" href="#"
+            onclick="toggleCode('M000044-source');return false;">[Source]</a></p>
+          <div class="method-source-code" id="M000044-source">
+<pre>
+      <span class="ruby-comment cmt"># File messages.rb, line 1138</span>
+1138:       <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">load</span>
+1139:         <span class="ruby-ivar">@contract_details</span> = <span class="ruby-constant">Datatypes</span><span class="ruby-operator">::</span><span class="ruby-constant">ContractDetails</span>.<span class="ruby-identifier">new</span>
+1140:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">summary</span>.<span class="ruby-identifier">symbol</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_string</span>
+1141:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">summary</span>.<span class="ruby-identifier">sec_type</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_string</span>
+1142:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">summary</span>.<span class="ruby-identifier">cusip</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_string</span>
+1143:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">summary</span>.<span class="ruby-identifier">coupon</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_decimal</span>
+1144:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">summary</span>.<span class="ruby-identifier">maturity</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_string</span>
+1145:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">summary</span>.<span class="ruby-identifier">issue_date</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_string</span>
+1146:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">summary</span>.<span class="ruby-identifier">ratings</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_string</span>
+1147:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">summary</span>.<span class="ruby-identifier">bond_type</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_string</span>
+1148:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">summary</span>.<span class="ruby-identifier">coupon_type</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_string</span>
+1149:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">summary</span>.<span class="ruby-identifier">convertible</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_boolean</span>
+1150:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">summary</span>.<span class="ruby-identifier">callable</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_boolean</span>
+1151:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">summary</span>.<span class="ruby-identifier">puttable</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_boolean</span>
+1152:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">summary</span>.<span class="ruby-identifier">desc_append</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_string</span>
+1153:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">summary</span>.<span class="ruby-identifier">exchange</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_string</span>
+1154:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">summary</span>.<span class="ruby-identifier">currency</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_string</span>
+1155:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">market_name</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_string</span>
+1156:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">trading_class</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_string</span>
+1157:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">con_id</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_int</span>
+1158:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">min_tick</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_decimal</span>
+1159:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">order_types</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_string</span>
+1160:         <span class="ruby-ivar">@contract_details</span>.<span class="ruby-identifier">valid_exchanges</span> = <span class="ruby-ivar">@socket</span>.<span class="ruby-identifier">read_string</span>
+1161:         
+1162:       <span class="ruby-keyword kw">end</span>
+</pre>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+
+  </div>
+
+
+<div id="validator-badges">
+  <p><small><a href="http://validator.w3.org/check/referer">[Validate]</a></small></p>
+</div>
+
+</body>
+</html>

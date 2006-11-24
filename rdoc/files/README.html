@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>File: README</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <meta http-equiv="Content-Script-Type" content="text/javascript" />
+  <link rel="stylesheet" href=".././rdoc-style.css" type="text/css" media="screen" />
+  <script type="text/javascript">
+  // <![CDATA[
+
+  function popupCode( url ) {
+    window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+  }
+
+  function toggleCode( id ) {
+    if ( document.getElementById )
+      elem = document.getElementById( id );
+    else if ( document.all )
+      elem = eval( "document.all." + id );
+    else
+      return false;
+
+    elemStyle = elem.style;
+    
+    if ( elemStyle.display != "block" ) {
+      elemStyle.display = "block"
+    } else {
+      elemStyle.display = "none"
+    }
+
+    return true;
+  }
+  
+  // Make codeblocks hidden by default
+  document.writeln( "<style type=\"text/css\">div.method-source-code { display: none }</style>" )
+  
+  // ]]>
+  </script>
+
+</head>
+<body>
+
+
+
+  <div id="fileHeader">
+    <h1>README</h1>
+    <table class="header-table">
+    <tr class="top-aligned-row">
+      <td><strong>Path:</strong></td>
+      <td>README
+      </td>
+    </tr>
+    <tr class="top-aligned-row">
+      <td><strong>Last Update:</strong></td>
+      <td>Thu Nov 23 20:05:18 PST 2006</td>
+    </tr>
+    </table>
+  </div>
+  <!-- banner header -->
+
+  <div id="bodyContent">
+
+
+
+  <div id="contextContent">
+
+    <div id="description">
+      <p>
+<a href="../classes/IB.html">IB</a>-Ruby: Ruby implementation of the
+Interactive Brokers&#8217; TWS API. Copyright (C) 2006 Blue Voodoo Magic
+LLC. By Paul Legato (pjlegato |at| bluevoodoomagic.com)
+</p>
+<h2>License</h2>
+<p>
+This library is free software; you can redistribute it and/or modify it
+under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation; either version 2.1 of the License, or (at
+your option) any later version.
+</p>
+<p>
+This library is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+for more details.
+</p>
+<p>
+You should have received a copy of the GNU Lesser General Public License
+along with this library; if not, write to the Free Software Foundation,
+Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+</p>
+<h2>Use At Your Own Risk</h2>
+<p>
+As the license indicates, this code is provided AS IS, WITH NO WARRANTY
+WHATSOEVER, not even an implied warranty of merchantability or fitness for
+a particular purpose. *ANY USE YOU MAKE OF THIS CODE IS ENTIRELY AT YOUR
+OWN RISK.* This code may contain any number of errors or bugs, both known
+and unknown. Use of this code for live trading may result in monetary loss
+due to known or unknown bugs. In no event shall the author be liable or
+responsible for any loss whatsoever, direct or indirect, that may occur as
+a result of your use of this code.
+</p>
+<h2>Overview</h2>
+<p>
+This provides a Ruby interface to the Interactive Brokers&#8217; Trader
+Workstation API (<a
+href="http://www.interactivebrokers.com">www.interactivebrokers.com</a>/).
+This code is not sanctioned or endorsed by <a
+href="../classes/IB.html">IB</a>.
+</p>
+<h2>Status of this release</h2>
+<p>
+This is an alpha test quality release. I specifically DO NOT recommend that
+it be used for live trading under any circumstances. It has not been
+tested. I am releasing it in the hopes that the many eyes of the community
+will help with enhancing it, so that we all will have a robust and reliable
+library to use.
+</p>
+<p>
+Though the message sender module exists, there isn&#8217;t a programmatic
+interface for sending messages yet. Coming soon.
+</p>
+<h2>Use</h2>
+<p>
+First, start up TWS and set it to allow connections from localhost.
+</p>
+<p>
+Then:
+</p>
+<pre>
+   require 'ib'
+
+   ib = IB::IB.new()
+</pre>
+<p>
+You should see messages flash by displaying the startup messages received
+from TWS.
+</p>
+<h2>Revision history</h2>
+<p>
+11/23/06 - 0.1 - alpha release
+</p>
+
+    </div>
+
+
+   </div>
+
+
+  </div>
+
+
+    <!-- if includes -->
+
+    <div id="section">
+
+
+
+
+
+      
+
+
+    <!-- if method_list -->
+
+
+  </div>
+
+
+<div id="validator-badges">
+  <p><small><a href="http://validator.w3.org/check/referer">[Validate]</a></small></p>
+</div>
+
+</body>
+</html>
