@@ -1,6 +1,6 @@
 IB-Ruby: Ruby implementation of the Interactive Brokers' TWS API.
 Copyright (C) 2006 Blue Voodoo Magic LLC.
-By Paul Legato (pjlegato@bluevoodoomagic.com)
+By Paul Legato (pjlegato |at| bluevoodoomagic.com)
 
 == License
 This library is free software; you can redistribute it and/or modify
