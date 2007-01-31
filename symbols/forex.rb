@@ -25,12 +25,24 @@ require 'datatypes'
 module IB
   module Symbols
     Forex = 
-      {
+     {
       :gbpusd => Datatypes::Contract.new({
-                                           :symbol => "GBPUSD",
+                                           :symbol => "GBP",
                                            :exchange => "IDEALPRO",
-                                           :currency => "USD"
+                                           :currency => "USD",
+                                           :sec_type => Datatypes::Contract::SECURITY_TYPES[:forex],
+                                           :description => "GBPUSD"
+                                           
+                                         }),
+      :eurusd => Datatypes::Contract.new({
+                                           :symbol => "EUR",
+                                           :exchange => "IDEALPRO",
+                                           :currency => "USD",
+                                           :sec_type => Datatypes::Contract::SECURITY_TYPES[:forex],
+                                           :description => "EURUSD"
+
                                          })
-      } 
+
+     } 
   end # Contracts
 end

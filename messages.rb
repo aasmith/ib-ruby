@@ -22,10 +22,9 @@
 # These fields are initialized to this MAX_VALUE.
 # This has been implemented with nils in Ruby to represent the case where an EOL should be sent.
 
+require 'iblogger'
 
 module IB
-  
-  IBLogger = Logger.new(STDERR) unless defined? IBLogger
 
 
   ################################################################
@@ -42,7 +41,7 @@ module IB
 
       # data is a Hash.
       def initialize(data=nil)
-        @data = StringentHash.new(data)
+        @data = Datatypes::StringentHash.new(data)
       end # initialize
 
 
@@ -78,10 +77,10 @@ module IB
         queue = [ self.class.message_id,
                   5, # message version number
                   @data[:ticker_id]
-                ].concat(@data[:contract].serialize_long())
+                ].concat(@data[:contract].serialize_long(server[:version]))
 
         queue.concat(@data[:contract].serialize_combo_legs
-                     ) if server[:version] >= 8 && @data[:contract].sec_type.upcase == "BAG" # I have no idea what "BAG" means. Copied from the Java code.
+                     ) if server[:version] >= 8 && @data[:contract].sec_type == "BAG" # I have no idea what "BAG" means. Copied from the Java code.
         
        queue.each {|datum|
          server[:socket].syswrite(datum.to_s + "\0")
@@ -508,7 +507,7 @@ module IB
                   @data[:ticker_id]
                 ]
 
-        queue.concat(@data[:contract].serialize_long)
+        queue.concat(@data[:contract].serialize_long(server[:version]))
 
         queue.concat([
                       @data[:end_date_time],
@@ -698,7 +697,7 @@ end # module OutgoingMessages
         @socket = nil
         
 
-        IBLogger.debug(" * New #{self.class.name}: #{ @data.inspect }")
+        IBLogger.debug(" * New #{self.class.name}: #{ self.inspect }")
       end
 
       def AbstractMessage.inherited(by)
@@ -712,16 +711,21 @@ end # module OutgoingMessages
 
       protected
 
+      #
+      # Load @data from the socket according to the given map.
+      #
       # map is a series of Arrays in the format [ [ :name, :type ] ], e.g. autoload([:version, :int ], [:ticker_id, :int])
-      # type identifiers must have a corresponding read_type method on socket.
+      # type identifiers must have a corresponding read_type method on socket (read_int, etc.).
+      #
       def autoload(*map)
+        #IBLogger.debug("autoloading map: " + map.inspect)
         map.each { |spec|
           @data[spec[0]] = @socket.__send__(("read_" + spec[1].to_s).to_sym)
         }
       end
 
       # version_load loads map only if @data[:version] is >= required_version.
-      def version_load(required_version, *map)
+      def version_load(required_version, map)
         autoload(map) if @data[:version] >= required_version 
       end
 
@@ -732,7 +736,44 @@ end # module OutgoingMessages
     
     # The IB code seems to dispatch up to two wrapped objects for this message, a tickPrice
     # and sometimes a tickSize, which seems to be identical to the TICK_SIZE object.
-    class TickerPrice < AbstractMessage
+    #
+    # Important note from
+    # http://chuckcaplan.com/twsapi/index.php/void%20tickPrice%28%29 :
+    #
+    # "The low you get is NOT the low for the day as you'd expect it
+    # to be. It appears IB calculates the low based on all
+    # transactions after 4pm the previous day. The most inaccurate
+    # results occur when the stock moves up in the 4-6pm aftermarket
+    # on the previous day and then gaps open upward in the
+    # morning. The low you receive from TWS can be easily be several
+    # points different from the actual 9:30am-4pm low for the day in
+    # cases like this. If you require a correct traded low for the
+    # day, you can't get it from the TWS API. One possible source to
+    # help build the right data would be to compare against what Yahoo
+    # lists on finance.yahoo.com/q?s=ticker under the "Day's Range"
+    # statistics (be careful here, because Yahoo will use anti-Denial
+    # of Service techniques to hang your connection if you try to
+    # request too many bytes in a short period of time from them). For
+    # most purposes, a good enough approach would start by replacing
+    # the TWS low for the day with Yahoo's day low when you first
+    # start watching a stock ticker; let's call this time T. Then,
+    # update your internal low if the bid or ask tick you receive is
+    # lower than that for the remainder of the day. You should check
+    # against Yahoo again at time T+20min to handle the occasional
+    # case where the stock set a new low for the day in between
+    # T-20min (the real time your original quote was from, taking into
+    # account the delay) and time T. After that you should have a
+    # correct enough low for the rest of the day as long as you keep
+    # updating based on the bid/ask. It could still get slightly off
+    # in a case where a short transaction setting a new low appears in
+    # between ticks of data that TWS sends you.  The high is probably
+    # distorted in the same way the low is, which would throw your
+    # results off if the stock traded after-hours and gapped down. It
+    # should be corrected in a similar way as described above if this
+    # is important to you."
+    #
+    
+    class TickPrice < AbstractMessage
       def self.message_id
         1
       end
@@ -745,33 +786,63 @@ end # module OutgoingMessages
         
         if @data[:version] >= 2
           # the IB code translates these into 0, 3, and 5, respectively, and wraps them in a TICK_SIZE-type wrapper.
-          # May need to revisit this when we figure out exactly what it does.
-          @data[:type] = case @socket.read_int
+          @data[:type] = case @data[:tick_type]
                          when 1
                            :bid
                          when 2
                            :ask
                          when 4
                            :last
+                         when 6
+                           :high
+                         when 7
+                           :low
+                         when 9
+                           :close
                          else
                            nil
                          end
         end
 
       end # load
+      
+      def inspect
+        "Tick (" + @data[:type].to_s + " at "  + @data[:price].to_digits + ") " + super.inspect
+      end
+      
+      def to_human
+        @data[:size].to_s + " " + @data[:type].to_s + " at " + @data[:price].to_digits
+      end
+
     end # TickPrice
 
 
 
-    class TickerSize < AbstractMessage
+    class TickSize < AbstractMessage
       def self.message_id
         2
       end
 
       def load
         autoload([:version, :int], [:ticker_id, :int], [:tick_type, :int], [:size, :int])
+        @data[:type] = case @data[:tick_type]
+                       when 0
+                         :bid
+                       when 3
+                         :ask
+                       when 5
+                         :last
+                       when 8
+                         :volume
+                       else
+                         nil
+                       end
       end
-    end # TickerSize
+      
+      def to_human
+        @data[:type].to_s + " size: " +  @data[:size].to_s
+      end
+    end # TickSize
 
 
 

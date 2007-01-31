@@ -24,15 +24,14 @@ require 'bigdecimal'
 require 'bigdecimal/util'
 
 require 'messages'
-
+require 'iblogger'
 
 module IB
 
   TWS_IP_ADDRESS = "127.0.0.1"
   TWS_PORT = "7496"
   
-  IBLogger = Logger.new(STDERR) unless defined? IBLogger
-
+  
   class IBSocket < TCPSocket
 
     # send nice null terminated binary data
@@ -103,7 +102,7 @@ module IB
       }.merge(options_in)
 
       @server[:socket] = IBSocket.open(@options[:ip], @options[:port])
-      IBLogger.debug("* open(): Socket connected to #{@options[:ip]}:#{@options[:port]}.")
+      IBLogger.info("* TWS socket connected to #{@options[:ip]}:#{@options[:port]}.")
 
       # Sekrit handshake.
       IBLogger.debug("\tSending client version #{Tws_client_version}..")
@@ -160,7 +159,10 @@ module IB
     # Subscribe to incoming message events of type messageClass.
     # code is a Proc that will be called with the message instance as its argument.
     def subscribe(messageClass, code)
-      raise(Exception.new("Invalid argument type (#{messageClass.class}, #{code.class}) - must be (IncomingMessages::AbstractMessage, Proc)")) unless messageClass.is_a?(IncomingMessages::AbstractMessage) && code.is_a?(Proc)
+      raise(Exception.new("Invalid argument type (#{messageClass}, #{code.class}) - " +
+                          " must be (IncomingMessages::AbstractMessage, Proc)")) unless
+        messageClass <= IncomingMessages::AbstractMessage && code.is_a?(Proc)
+      
       @listeners[messageClass].push(code)
     end 
 
@@ -168,7 +170,7 @@ module IB
 
     # Send an outgoing message.
     def dispatch(message)
-      raise Exception.new("dispatch() must be given an OutgoingMessages::AbstractMessage subclass") unless message.is_a? OutgoingMessage::AbstractMessage
+      raise Exception.new("dispatch() must be given an OutgoingMessages::AbstractMessage subclass") unless message.is_a?(OutgoingMessages::AbstractMessage)
       message.send(@server)
     end
 
@@ -186,7 +188,7 @@ module IB
         # create a new instance of the appropriate message type, and have it read the message.
         msg = IncomingMessages::Table[msg_id].new(@server[:socket], @server[:version])
 
-        @listeners[msg].each { |listener|
+        @listeners[msg.class].each { |listener|
           listener.call(msg)
         }
 

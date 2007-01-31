@@ -34,7 +34,7 @@ module IB
 
       def initialize(attributeHash=nil)
         if attributeHash.nil?
-          reset
+          init
         else
           raise(ArgumentError.new("Argument must be a Hash")) unless attributeHash.is_a?(Hash)
           attributeHash.keys.each {|key|
@@ -59,7 +59,7 @@ module IB
       Opt_Specialist = 'y'
 
       # Main order fields
-      attr_accessor(:order_id, :client_id, :perm_id, :action, :total_quantity, :order_type, :limit_price,
+      attr_accessor(:id, :client_id, :perm_id, :action, :total_quantity, :order_type, :limit_price,
                     :aux_price, :shares_allocation)
       
       # Extended order fields
@@ -143,9 +143,12 @@ module IB
           :forex => "CASH",
           :bag => "BAG"
         }
+
+      # note that the :description field is entirely local to ib-ruby, and not part of TWS.
+      # You can use it to store whatever arbitrary data you want.
       
       attr_accessor(:symbol, :strike, :multiplier, :exchange, :currency,
-                    :local_symbol, :combo_legs)
+                    :local_symbol, :combo_legs, :description)
 
       # Bond values
       attr_accessor(:cusip, :ratings, :desc_append, :bond_type, :coupon_type, :callable, :puttable,
@@ -157,8 +160,8 @@ module IB
       
       # some protective filters
       
-      def primary_exchange(x)
-        x.upcase!
+      def primary_exchange=(x)
+        x.upcase! if x.is_a?(String)
 
         # per http://chuckcaplan.com/twsapi/index.php/Class%20Contract
         raise(ArgumentError.new("Don't set primary_exchange to smart")) if x == "SMART" 
@@ -167,18 +170,18 @@ module IB
       end
       
       def right=(x)
-        x.upcase!
-        raise(ArgumentError.new("Invalid right \"#{x}\" (must be one of PUT, CALL, P, C)"))  unless [ "PUT", "CALL", "P", "C"].include?(x)
+        x.upcase! if x.is_a?(String)
+ #       raise(ArgumentError.new("Invalid right \"#{x}\" (must be one of PUT, CALL, P, C)"))  unless [ "PUT", "CALL", "P", "C"].include?(x)
         @right = x
       end
       
       def expiry=(x)
-        raise(ArgumentError.new("Invalid expiry \"#{x}\" (must be in format YYYYMM)"))  unless x.to_s =~ /^\d\d\d\d\d\d$/
+#        raise(ArgumentError.new("Invalid expiry \"#{x}\" (must be in format YYYYMM)"))  unless x.to_s =~ /^\d\d\d\d\d\d$/
         @expiry = x.to_s
       end
       
       def sec_type=(x)
-        raise(ArgumentError.new("Invalid security type \"#{x}\" (see SECURITY_TYPES constant in Contract class for valid types)"))  unless SECURITY_TYPES.values.include?(x)
+#        raise(ArgumentError.new("Invalid security type \"#{x}\" (see SECURITY_TYPES constant in Contract class for valid types)"))  unless SECURITY_TYPES.values.include?(x)
         @sec_type = x
       end
 
@@ -237,6 +240,7 @@ module IB
       def init
         @combo_legs = Array.new
         @strike = 0
+        @sec_type = ''
       end
 
     end # class Contract
