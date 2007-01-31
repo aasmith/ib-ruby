@@ -28,6 +28,9 @@ require 'messages'
 
 module IB
 
+  TWS_IP_ADDRESS = "127.0.0.1"
+  TWS_PORT = "7496"
+  
   IBLogger = Logger.new(STDERR) unless defined? IBLogger
 
   class IBSocket < TCPSocket
@@ -64,8 +67,8 @@ module IB
 
     def initialize(options_in = {})
       @options = {
-        :ip => "127.0.0.1",
-        :port => "7496",
+        :ip => TWS_IP_ADDRESS,
+        :port => TWS_PORT,
       }.merge(options_in)
 
       @connected = false

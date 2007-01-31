@@ -348,7 +348,7 @@ module IB
                   3, # version
                   @data[:ticker_id]
                 ]
-        queue.concat(@data[:contract].serialize(server[:version]))
+        queue.concat(@data[:contract].serialize_short(server[:version]))
         queue.push(@data[:num_rows]) if server[:version] >= 19
 
         queue

@@ -28,7 +28,24 @@ module IB
 
   module Datatypes
 
-    class Order
+    class AbstractDatum
+      def init
+      end
+
+      def initialize(attributeHash=nil)
+        if attributeHash.nil?
+          reset
+        else
+          raise(ArgumentError.new("Argument must be a Hash")) unless attributeHash.is_a?(Hash)
+          attributeHash.keys.each {|key|
+            self.send((key.to_s + "=").to_sym, attributeHash[key])
+          }
+        end
+      end
+    end # AbstractDatum
+    
+    
+    class Order < AbstractDatum
       # Constants used in Order objects. Drawn from Order.java
       Origin_Customer = 0
       Origin_Firm = 1
@@ -92,8 +109,8 @@ module IB
                     :delta_neutral_order_type,
                     :delta_neutral_aux_price)
 
-      Max_value = 99999999 # I don't know why they use a very large number as the default for certain fields
-      def initialize
+      Max_value = 99999999 # I don't know why IB uses a very large number as the default for certain fields
+      def init
         @open_close = "0" 
         @origin = Origin_Customer
         @transmit = true
@@ -113,19 +130,62 @@ module IB
     end # class Order
 
 
-    class Contract
-      attr_accessor(:symbol, :sec_type, :expiry, :strike, :right, :multiplier, :exchange, :currency,
-                    :local_symbol, :combo_legs, :primary_exchange)
+    class Contract < AbstractDatum
+
+      # Valid security types (sec_type attribute)
+      SECURITY_TYPES =
+        {
+          :stock => "STK",
+          :option => "OPT",
+          :future => "FUT",
+          :index => "IND",
+          :futures_option => "FOP",
+          :forex => "CASH",
+          :bag => "BAG"
+        }
+      
+      attr_accessor(:symbol, :strike, :multiplier, :exchange, :currency,
+                    :local_symbol, :combo_legs)
 
       # Bond values
       attr_accessor(:cusip, :ratings, :desc_append, :bond_type, :coupon_type, :callable, :puttable,
                     :coupon, :convertible, :maturity, :issue_date)
       
-      def initialize
-        @combo_legs = Array.new
-        @strike = 0
+      attr_reader :sec_type, :expiry, :right, :primary_exchange
+      
+      
+      
+      # some protective filters
+      
+      def primary_exchange(x)
+        x.upcase!
+
+        # per http://chuckcaplan.com/twsapi/index.php/Class%20Contract
+        raise(ArgumentError.new("Don't set primary_exchange to smart")) if x == "SMART" 
+        
+        @primary_exchange = x
+      end
+      
+      def right=(x)
+        x.upcase!
+        raise(ArgumentError.new("Invalid right \"#{x}\" (must be one of PUT, CALL, P, C)"))  unless [ "PUT", "CALL", "P", "C"].include?(x)
+        @right = x
+      end
+      
+      def expiry=(x)
+        raise(ArgumentError.new("Invalid expiry \"#{x}\" (must be in format YYYYMM)"))  unless x.to_s =~ /^\d\d\d\d\d\d$/
+        @expiry = x.to_s
+      end
+      
+      def sec_type=(x)
+        raise(ArgumentError.new("Invalid security type \"#{x}\" (see SECURITY_TYPES constant in Contract class for valid types)"))  unless SECURITY_TYPES.values.include?(x)
+        @sec_type = x
       end
 
+      def reset
+        @combo_legs = Array.new
+        @strike = 0
+      end      
 
       # Different messages serialize contracts differently. Go figure.
       def serialize_short(version)
@@ -153,7 +213,7 @@ module IB
                   self.sec_type,
                   self.expiry,
                   self.strike,
-                  self.right,
+                  self.right
                 ]
 
         queue.push(self.multiplier) if version >= 15
@@ -170,18 +230,22 @@ module IB
         if self.combo_legs.nil?
           [0]
         else
-          [ self.combo_legs.size ].concat(self.combo_legs.serialize(include_open_close)
+          [ self.combo_legs.size ].concat(self.combo_legs.serialize(include_open_close))
         end     
       end
 
+      def init
+        @combo_legs = Array.new
+        @strike = 0
+      end
 
     end # class Contract
 
 
-    class ContractDetails
+    class ContractDetails < AbstractDatum
       attr_accessor :summary, :market_name, :trading_class, :con_id, :min_tick, :multiplier, :price_magnifier, :order_types, :valid_exchanges
 
-      def initialize
+      def init
         @summary = Contract.new
         @con_id = 0
         @min_tick = 0
@@ -189,10 +253,10 @@ module IB
     end # class ContractDetails
 
 
-    class Execution
+    class Execution < AbstractDatum
       attr_accessor :order_id, :client_id, :exec_id, :time, :account_number, :exchange, :side, :shares, :price, :perm_id, :liquidation
 
-      def initialize
+      def init
         @order_id = 0
         @client_id = 0
         @shares = 0
@@ -203,46 +267,24 @@ module IB
     end # Execution
 
     # EClientSocket.java tells us: 'Note that the valid format for m_time is "yyyymmdd-hh:mm:ss"'
-    class ExecutionFilter
+    class ExecutionFilter < AbstractDatum
       attr_accessor :client_id, :acct_code, :time, :symbol, :sec_type, :exchange, :side
       
-      def initialize
+      def init
         @client_id = 0
       end
 
-      def initialize(options_in)
-        options = StringentHash.new(options_in)
-
-        @client_id = options[:client_id]
-        @acct_code = options[:acct_code]
-        @time = options[:time]
-        @symbol = options[:symbol]
-        @sec_type = options[:sec_type]
-        @exchange = options[:exchange]
-        @side = options[:side]
-      end
     end # ExecutionFilter
 
 
-    class ComboLeg
+    class ComboLeg < AbstractDatum
       attr_accessor :con_id, :ratio, :action, :exchange, :open_close
 
-      def initialize
+      def init
         @con_id = 0
         @ratio = 0
         @open_close = 0
       end
-
-      def initialize(options_in)
-        options = StringentHash.new(options_in)
-
-        @con_id = options[:con_id]
-        @ratio = options[:ratio]
-        @action = options[:action]
-        @exchange = options[:exchange]
-        @open_close = options[:open_close]
-      end
-
 
       # Some messages include open_close, some don't. wtf.
       def serialize(include_open_close = false)
@@ -253,13 +295,13 @@ module IB
     end # ComboLeg
 
 
-    class ScannerSubscription
+    class ScannerSubscription < AbstractDatum
       attr_accessor :number_of_rows, :instrument, :location_code, :scan_code, :above_price, :below_price,
                     :above_volume, :average_option_volume_above, :market_cap_above, :market_cap_below, :moody_rating_above,
-                    :moody_rating_below, :sp_rating_above:, :sp_rating_below, :maturity_date_above, :maturity_date_below,
+                    :moody_rating_below, :sp_rating_above, :sp_rating_below, :maturity_date_above, :maturity_date_below,
                     :coupon_rate_above, :coupon_rate_below, :exclude_convertible, :scanner_setting_pairs, :stock_type_filter
 
-      def initialize
+      def init
         @coupon_rate_above = @coupon_rate_below = @market_cap_below = @market_cap_above = @average_option_volume_above = 
           @above_volume = @below_price = @above_price = nil
         @number_of_rows = -1 # none specified, per ScannerSubscription.java
