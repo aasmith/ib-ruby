@@ -171,17 +171,17 @@ module IB
       
       def right=(x)
         x.upcase! if x.is_a?(String)
- #       raise(ArgumentError.new("Invalid right \"#{x}\" (must be one of PUT, CALL, P, C)"))  unless [ "PUT", "CALL", "P", "C"].include?(x)
+        raise(ArgumentError.new("Invalid right \"#{x}\" (must be one of PUT, CALL, P, C)"))  unless [ "PUT", "CALL", "P", "C"].include?(x)
         @right = x
       end
       
       def expiry=(x)
-#        raise(ArgumentError.new("Invalid expiry \"#{x}\" (must be in format YYYYMM)"))  unless x.to_s =~ /^\d\d\d\d\d\d$/
+        raise(ArgumentError.new("Invalid expiry \"#{x}\" (must be in format YYYYMM)"))  unless x.to_s =~ /^\d\d\d\d\d\d$/
         @expiry = x.to_s
       end
       
       def sec_type=(x)
-#        raise(ArgumentError.new("Invalid security type \"#{x}\" (see SECURITY_TYPES constant in Contract class for valid types)"))  unless SECURITY_TYPES.values.include?(x)
+        raise(ArgumentError.new("Invalid security type \"#{x}\" (see SECURITY_TYPES constant in Contract class for valid types)"))  unless SECURITY_TYPES.values.include?(x)
         @sec_type = x
       end
 

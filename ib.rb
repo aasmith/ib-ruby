@@ -192,6 +192,12 @@ module IB
           listener.call(msg)
         }
 
+        # Log the message if it's an error.
+        if msg.is_a?(IncomingMessages::Error)
+          IBLogger.error(msg.to_human)
+        end
+        
+        
         # IBLogger.debug("Reader done with message id #{msg_id}.")
         
 

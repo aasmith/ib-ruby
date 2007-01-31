@@ -17,6 +17,12 @@
 # 02110-1301 USA
 #
 
+#
+# Note that the :description field is particular to ib-ruby, and is NOT part of the standard TWS API.
+# It is never transmitted to IB. It's purely used clientside, and you can store any arbitrary string that
+# you may find useful there.
+#
+
 $:.push(File.dirname(__FILE__) + "/../")
 
 require 'ib'

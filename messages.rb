@@ -878,6 +878,9 @@ end # module OutgoingMessages
         end
       end
 
+      def to_human
+        "TWS #{@data[:code]}: #{@data[:message]}"
+      end
     end # class ErrorMessage
 
     class OpenOrder < AbstractMessage
