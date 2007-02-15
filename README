@@ -1,6 +1,7 @@
 IB-Ruby: Ruby implementation of the Interactive Brokers' TWS API.
+Copyright (C) 2006-2007 Paul Legato 
 Copyright (C) 2006 Blue Voodoo Magic LLC.
-By Paul Legato (pjlegato |at| bluevoodoomagic.com)
+By Paul Legato (pjlegato at gmail dot com)
 
 == License
 This library is free software; you can redistribute it and/or modify
@@ -22,13 +23,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 As the license indicates, this code is provided AS IS, WITH NO
 WARRANTY WHATSOEVER, not even an implied warranty of merchantability
-or fitness for a particular purpose. *ANY USE YOU MAKE OF THIS CODE IS
-ENTIRELY AT YOUR OWN RISK.* This code may contain any number of errors
-or bugs, both known and unknown. Use of this code for live trading may
-result in monetary loss due to known or unknown bugs and errors. In no event
-shall the author be liable or responsible for any loss whatsoever,
-direct or indirect, that may occur as a result of your use of this
-code.
+or fitness for a particular purpose. 
+
+*ANY USE YOU MAKE OF THIS CODE IS ENTIRELY AT YOUR OWN RISK.* 
+
+This code may contain any number of errors or bugs, both known and
+unknown. Use of this code may result in monetary loss due to known or
+unknown bugs and errors. In no event shall the author be liable or
+responsible for any loss whatsoever, direct or indirect, that may
+occur as a result of your use of this code.
 
 
 == Overview
@@ -45,8 +48,6 @@ been tested. I am releasing it in the hopes that the many eyes of the
 community will help with enhancing it, so that we all will have a
 robust and reliable library to use.
 
-Though the message sender module exists, there isn't a programmatic
-interface for sending messages yet. Coming soon.
 
 
 == Use
@@ -61,6 +62,10 @@ Then:
 You should see messages flash by displaying the startup messages
 received from TWS.
 
+See also the code in examples/ directory.
+
 
 == Revision history
 11/23/06 - 0.1 - alpha release
+02/14/07 - 0.2 - alpha release
+
