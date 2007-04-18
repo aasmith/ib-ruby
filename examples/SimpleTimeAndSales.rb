@@ -30,7 +30,8 @@ ib = IB::IB.new
 # Define the symbols we're interested in.
 @market = 
   {
-    123 => IB::Symbols::Futures[:gbp]
+    123 => IB::Symbols::Futures[:gbp],
+    234 => IB::Symbols::Futures[:jpy]
   }
 
 

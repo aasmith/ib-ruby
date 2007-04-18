@@ -26,7 +26,15 @@ require 'iblogger'
 
 module IB
 
-
+  class ExtremelyAbstractMessage
+    attr_reader :created_at
+    
+    def to_human
+      self.inspect
+    end
+  end
+  
+  
   ################################################################
   #### Outgoing messages
   ################################################################
@@ -34,21 +42,35 @@ module IB
   module OutgoingMessages
     EOL = "\0"
 
-    class AbstractMessage
+    class AbstractMessage < ExtremelyAbstractMessage
       def self.message_id
         raise Exception("AbstractMessage.message_id called - you need to override this in a subclass.")
       end
 
       # data is a Hash.
       def initialize(data=nil)
+        @created_at = Time.now
         @data = Datatypes::StringentHash.new(data)
       end # initialize
 
 
       # This causes the message to send itself over the server socket in server[:socket]. 
       # "server" is the @server instance variable from the IB object. You can also use this to e.g. get the server version number.
+      #
+      # Subclasses can either override this method for precise control
+      # over how stuff gets sent to the server, or else define a
+      # method queue() that returns an Array of elements that ought to
+      # be sent to the server by calling to_s on each one and
+      # postpending a '\0'.
+      #
       def send(server)
-        raise Exception("AbstractMessage.send called - you need to override this in a subclass.")        
+        self.queue(server).each {|datum|
+         server[:socket].syswrite(datum.to_s + "\0")
+       }
+      end
+
+      def queue
+        raise Exception("AbstractMessage.queue() called - you need to override this in a subclass.")        
       end
 
 
@@ -73,7 +95,7 @@ module IB
         1
       end
 
-      def send(server)
+      def queue(server)
         queue = [ self.class.message_id,
                   5, # message version number
                   @data[:ticker_id]
@@ -82,10 +104,9 @@ module IB
         queue.concat(@data[:contract].serialize_combo_legs
                      ) if server[:version] >= 8 && @data[:contract].sec_type == "BAG" # I have no idea what "BAG" means. Copied from the Java code.
         
-       queue.each {|datum|
-         server[:socket].syswrite(datum.to_s + "\0")
-       }
-      end # send
+        
+        queue
+      end # queue
     end # RequestMarketData
 
     # Data format is { :ticker_id => int }
@@ -93,13 +114,11 @@ module IB
       def self.message_id
         2
       end
-      def send(server)
+      def queue(server)
         [ self.class.message_id,
           1, # message version number
-          @data[:ticker_id] ].each { |datum| 
-          server[:socket].syswrite(datum.to_s + "\0")
-        }
-      end # send
+          @data[:ticker_id] ]
+      end # queue
     end # CancelMarketData
 
     # Data format is { :order_id => int, :contract => Contract, :order => Order }
@@ -108,7 +127,7 @@ module IB
         3
       end
 
-      def send(server)
+      def queue(server)
         queue = [ self.class.message_id,
                   20, # version
                   @data[:order_id],
@@ -216,7 +235,7 @@ module IB
         end # if version >= 26
 
         queue
-      end # send
+      end # queue()
 
     end # PlaceOrder
 
@@ -226,20 +245,20 @@ module IB
         4
       end
       
-      def send(server)
+      def queue(server)
         [
          self.class.message_id,
          1,  # version
          @data[:id]
         ]
-      end # send
+      end # queue
     end # CancelOrder
 
     class RequestOpenOrders < AbstractMessage
       def self.message_id
         5
       end
-      def send(server)
+      def queue(server)
         [ self.class.message_id,
           1 # version
         ]
@@ -267,7 +286,7 @@ module IB
       def self.message_id
         7
       end
-      def send(server)
+      def queue(server)
         queue = [ self.class.message_id,
                   2 # version
                 ]
@@ -285,7 +304,7 @@ module IB
                      ]) if server[:version] >= 9
                   
         queue
-      end # send
+      end # queue
     end # RequestExecutions
 
 
@@ -295,7 +314,7 @@ module IB
         8
       end
 
-      def send
+      def queue(server)
         [ self.class.message_id,
           1, # version
           @data[:number_of_ids]
@@ -340,7 +359,7 @@ module IB
         10
       end
 
-      def send(server)
+      def queue(server)
         requireVersion(server, 6)
 
         queue = [ self.class.message_id,
@@ -352,7 +371,7 @@ module IB
 
         queue
                      
-      end # send
+      end # queue
     end # RequestMarketDepth
 
     # data = { :ticker_id => int }
@@ -360,7 +379,7 @@ module IB
       def self.message_id
         11
       end
-      def send(server)
+      def queue(server)
         requireVersion(self, 6)
 
         [ self.class.message_id,
@@ -377,7 +396,7 @@ module IB
         12
       end
 
-      def send(server)
+      def queue(server)
         [ self.class.message_id,
           1, # version
           @data[:all_messages]
@@ -390,7 +409,7 @@ module IB
         13
       end
 
-      def send(server)
+      def queue(server)
         [ self.class.message_id,
           1 # version
         ]
@@ -403,7 +422,7 @@ module IB
         14
       end
 
-      def send(server)
+      def queue(server)
         [ self.class.message_id,
           1, # version
           @data[:loglevel]
@@ -417,7 +436,7 @@ module IB
         15
       end
 
-      def send(server)
+      def queue(server)
         [ self.class.message_id,
           1, # version
           @data[:auto_bind]
@@ -431,7 +450,7 @@ module IB
         16
       end
 
-      def send(server)
+      def queue(server)
         [ self.class.message_id,
           1 # version
         ]
@@ -443,7 +462,7 @@ module IB
         17
       end
 
-      def send(server)
+      def queue(server)
         [ self.class.message_id,
           1 # version
         ]
@@ -457,7 +476,7 @@ module IB
         18
       end
 
-      def send(server)
+      def queue(server)
         requireVersion(server, 13)
 
         [ self.class.message_id,
@@ -474,7 +493,7 @@ module IB
         19
       end
 
-      def send(server)
+      def queue(server)
         requireVersion(server, 13)
 
         [ self.class.message_id,
@@ -488,20 +507,88 @@ module IB
     # data = { :ticker_id => int, 
     #          :contract => Contract,
     #          :end_date_time => string,
-    #          :duration => string,
+    #          :duration => string, # this specifies an integer number of seconds
     #          :bar_size => int,
-    #          :what_to_show => string,
-    #          :use_RTH => int, # no idea what this is
+    #          :what_to_show => symbol, # one of :trades, :midpoint, :bid, or :ask
+    #          :use_RTH => int,
     #          :format_date => int
     #        }
+    #
+    # Note that as of 4/07 there is no historical data available for forex spot.
+    #
+    # See
+    # http://chuckcaplan.com/twsapi/index.php/void%20reqIntradayData%28%29
+    # , whence the following has been adapted:
+    #
+    # The server providing historical prices appears to not always be
+    # available outside of market hours. If you call it outside of its
+    # supported time period, or if there is otherwise a problem with
+    # it, you will receive error #162 "Historical Market Data Service
+    # query failed.:HMDS query returned no data."
+    #
+    # The "endDateTime" parameter accepts a string in the form
+    # "yyyymmdd HH:mm:ss", with a time zone optionally allowed after a
+    # space at the end of the string; e.g. "20050701 18:26:44 GMT"
+    #
+    # The ticker id needs to be different than the reqMktData ticker
+    # id. If you use the same ticker ID you used for the symbol when
+    # you did ReqMktData, nothing comes back for the historical data
+    # call.
+    #
+    # Possible :bar_size values:
+    # 1 = 1 sec
+    # 2 = 5 sec
+    # 3 = 15 sec
+    # 4 = 30 sec
+    # 5 = 1 minute
+    # 6 = 2 minutes
+    # 7 = 5 minutes
+    # 8 = 15 minutes
+    # 9 = 30 minutes
+    # 10 = 1 hour
+    # 11 = 1 day
+    #
+    # The nature of the data extracted is governed by sending a string
+    # having a value of "TRADES," "MIDPOINT," "BID," or "ASK." Here,
+    # we require a symbol argument of :trades, :midpoint, :bid, or
+    # :asked to be passed as data[:what_to_show].
+    #
+    # If data[:use_RTH] is set to 0, all data available during the time
+    # span requested is returned, even data bars covering time
+    # intervals where the market in question was illiquid. If useRTH
+    # has a non-zero value, only data within the "Regular Trading
+    # Hours" of the product in question is returned, even if the time
+    # span requested falls partially or completely outside of them.
+    #
+    # Using a :format_date of 1 will cause the dates in the returned
+    # messages with the historic data to be in a text format, like
+    # "20050307 11:32:16". If you set :format_date to 2 instead, you
+    # will get an offset in seconds from the beginning of 1970, which
+    # is the same format as the UNIX epoch time.
+    #
+    # For backfill on futures data, you may need to leave the Primary
+    # Exchange field of the Contract structure blank; see
+    # http://www.interactivebrokers.com/discus/messages/2/28477.html?1114646754
+    # [This message does not appear to exist anymore as of 4/07.]
+
+    ALLOWED_HISTORICAL_TYPES = [:trades, :midpoint, :bid, :ask]
+    
     class RequestHistoricalData < AbstractMessage
       def self.message_id
         20
       end
 
-      def send(server)
+#      def send(server)
+      def queue(server)
         requireVersion(server, 16)
 
+        if @data.has_key?(:what_to_show) && @data[:what_to_show].is_a?(String)
+          @data[:what_to_show].downcase! 
+          @data[:what_to_show] = @data[:what_to_show].to_sym
+        end
+        
+        raise ArgumentError("RequestHistoricalData: @data[:what_to_show] must be one of #{ALLOWED_HISTORICAL_TYPES.inspect}.") unless ALLOWED_HISTORICAL_TYPES.include?(@data[:what_to_show])
+        
         queue = [ self.class.message_id,
                   3, # version
                   @data[:ticker_id]
@@ -518,7 +605,7 @@ module IB
         queue.concat([
                       @data[:duration],
                       @data[:use_RTH],
-                      @data[:what_to_show]
+                      @data[:what_to_show].to_s.upcase
                      ])
 
         queue.push(@data[:format_date]) if server[:version] > 16
@@ -542,7 +629,7 @@ module IB
         21
       end
 
-      def send(server)
+      def queue(server)
 
         requireVersion(server, 21)
 
@@ -557,8 +644,8 @@ module IB
                   @data[:account],
                   @data[:override]
                  ])
-       
-      end
+        q
+      end # queue
     end # ExerciseOptions
 
     # data = { :ticker_id => int,
@@ -569,7 +656,7 @@ module IB
         22
       end
 
-      def send(server)
+      def queue(server)
         requireVersion(server, 24)
 
         [
@@ -610,7 +697,7 @@ module IB
         23
       end 
 
-      def send(server)
+      def queue(server)
         requireVersion(server, 24)
         [self.class.message_id,
          1, # version
@@ -625,7 +712,7 @@ module IB
         24
       end
 
-      def send(server)
+      def queue(server)
         requireVersion(server, 24)
 
         [ self.class.message_id,
@@ -641,7 +728,7 @@ module IB
         25
       end
 
-      def send(server)
+      def queue(server)
         requireVersion(server, 24)
         [ self.class.message_id,
           1, # version
@@ -676,8 +763,8 @@ end # module OutgoingMessages
     #
     # Override the load(socket) method in your subclass to do actual reading into @data.
     #
-    class AbstractMessage
-      attr_accessor :data, :created_at
+    class AbstractMessage < ExtremelyAbstractMessage
+      attr_accessor :data
 
       def self.message_id
         raise Exception("AbstractMessage.message_id called - you need to override this in a subclass.")
@@ -698,7 +785,7 @@ end # module OutgoingMessages
         @socket = nil
         
 
-        IBLogger.debug(" * New #{self.class.name}: #{ self.inspect }")
+        IBLogger.debug(" * New #{self.class.name}: #{ self.to_human }")
       end
 
       def AbstractMessage.inherited(by)
@@ -726,8 +813,12 @@ end # module OutgoingMessages
       end
 
       # version_load loads map only if @data[:version] is >= required_version.
-      def version_load(required_version, map)
-        autoload(map) if @data[:version] >= required_version 
+      def version_load(required_version, *map)
+        if @data[:version] >= required_version 
+          map.each {|item|
+            autoload(item) 
+          }
+        end
       end
 
     end # class AbstractMessage
@@ -1189,7 +1280,7 @@ end # module OutgoingMessages
 
         autoload([:item_count, :int])
         @data[:history] = Array.new(@data[:item_count]) {|index|
-          {
+          attrs = {
             :date => @socket.read_string,
             :open => @socket.read_decimal,
             :high => @socket.read_decimal,
@@ -1199,8 +1290,14 @@ end # module OutgoingMessages
             :wap => @socket.read_decimal,
             :has_gaps => @socket.read_string
           }
+          
+          Datatypes::Bar.new(attrs)
         }
 
+      end
+      
+      def to_human
+        "<HistoricalData: req id #{@data[:req_id]}, #{@data[:item_count]} items, from #{@data[:start_date_str]} to #{@data[:end_date_str]}>"
       end
     end # HistoricalData
 

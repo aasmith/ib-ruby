@@ -36,21 +36,32 @@ module IB
      {
       :es => Datatypes::Contract.new({
                                        :symbol => "ES",
-                                       :expiry => "200703", # <---- Change this date!!
+                                       :expiry => "200706", # <---- Change this date!!
                                        :exchange => "GLOBEX",
                                        :currency => "USD",
                                        :sec_type => Datatypes::Contract::SECURITY_TYPES[:future],
                                        :multiplier => 50,
                                        :description => "E-Mini S&P 500"
                                      }),
+      
       :gbp => Datatypes::Contract.new({
                                        :symbol => "GBP",
-                                       :expiry => "200703", # <---- Change this date!!
+                                       :expiry => "200706", # <---- Change this date!!
                                        :exchange => "GLOBEX",
                                        :currency => "USD",
                                        :sec_type => Datatypes::Contract::SECURITY_TYPES[:future],
-                                       :multiplier => 50,
+                                       :multiplier => 62500,
                                        :description => "British Pounds"
+                                     }),
+      
+      :jpy => Datatypes::Contract.new({
+                                       :symbol => "JPY",
+                                       :expiry => "200706", # <---- Change this date!!
+                                       :exchange => "GLOBEX",
+                                       :currency => "USD",
+                                       :sec_type => Datatypes::Contract::SECURITY_TYPES[:future],
+                                       :multiplier => 12500000,
+                                       :description => "Japanese Yen"
                                      })
 
      } 

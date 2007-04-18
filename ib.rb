@@ -26,6 +26,16 @@ require 'bigdecimal/util'
 require 'messages'
 require 'iblogger'
 
+
+# Add method to_ib to render datetime in IB format (zero padded "yyyymmdd HH:mm:ss")
+class Time
+  def to_ib
+    "#{self.year}#{sprintf("%02d", self.month)}#{sprintf("%02d", self.day)} " +
+    "#{sprintf("%02d", self.hour)}:#{sprintf("%02d", self.min)}:#{sprintf("%02d", self.sec)}"
+  end
+end # Time
+
+
 module IB
 
   TWS_IP_ADDRESS = "127.0.0.1"
@@ -170,7 +180,10 @@ module IB
 
     # Send an outgoing message.
     def dispatch(message)
-      raise Exception.new("dispatch() must be given an OutgoingMessages::AbstractMessage subclass") unless message.is_a?(OutgoingMessages::AbstractMessage)
+      raise Exception.new("dispatch() must be given an OutgoingMessages::AbstractMessage subclass") unless 
+        message.is_a?(OutgoingMessages::AbstractMessage)
+      
+      IBLogger.info("Sending message " + message.inspect)
       message.send(@server)
     end
 
@@ -183,7 +196,9 @@ module IB
 
       while true
         msg_id = @server[:socket].read_int # this blocks, so Thread#join is useless.
-        IBLogger.debug("Reader: got message id #{msg_id}.")
+        IBLogger.debug {
+          "Reader: got message id #{msg_id}.\n"
+        }
         
         # create a new instance of the appropriate message type, and have it read the message.
         msg = IncomingMessages::Table[msg_id].new(@server[:socket], @server[:version])
@@ -192,9 +207,19 @@ module IB
           listener.call(msg)
         }
 
+        IBLogger.debug {
+          " Listeners: " + @listeners.inspect + " inclusion: #{ @listeners.include?(msg.class)}" 
+        }
+
+        
         # Log the message if it's an error.
         if msg.is_a?(IncomingMessages::Error)
           IBLogger.error(msg.to_human)
+        else
+          # Warn if nobody listened to a non-error incoming message.
+          unless @listeners[msg.class].size > 0
+            IBLogger.warn { " WARNING: Nobody listened to incoming message #{msg.to_human}" }
+          end      
         end
         
         

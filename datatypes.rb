@@ -34,6 +34,12 @@ module IB
         @created_at = Time.now
       end
 
+      # If a hash is given, keys are taken as attribute names, values as data.
+      # The attrs of the instance are set automatically from the attributeHash.
+      #
+      # If no hash is given, #init is called in the instance. #init
+      # should set the datum up in a generic state.
+      #
       def initialize(attributeHash=nil)
         if attributeHash.nil?
           init
@@ -45,6 +51,18 @@ module IB
         end
       end
     end # AbstractDatum
+
+    
+    # This is used within HistoricData messages.
+    # Instantiate with a Hash of attributes, to be auto-set via initialize in AbstractDatum.
+    class Bar < AbstractDatum
+      attr_accessor :date, :open, :high, :low, :close, :volume, :wap, :has_gaps
+      
+      def to_s
+        "<Bar: #{@date}; OHLC: #{@open.to_digits}, #{@high.to_digits}, #{@low.to_digits}, #{@close.to_digits}; volume: #{@volume}; wap: #{@wap.to_digits}; has_gaps: #{@has_gaps}>"
+      end
+      
+    end # Bar
     
     
     class Order < AbstractDatum
