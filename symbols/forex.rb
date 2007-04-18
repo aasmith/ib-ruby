@@ -47,6 +47,14 @@ module IB
                                            :sec_type => Datatypes::Contract::SECURITY_TYPES[:forex],
                                            :description => "EURUSD"
 
+                                         }),
+      :usdjpy => Datatypes::Contract.new({
+                                           :symbol => "USD",
+                                           :exchange => "IDEALPRO",
+                                           :currency => "JPY",
+                                           :sec_type => Datatypes::Contract::SECURITY_TYPES[:forex],
+                                           :description => "USDJPY"
+
                                          })
 
      } 

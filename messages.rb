@@ -677,7 +677,7 @@ end # module OutgoingMessages
     # Override the load(socket) method in your subclass to do actual reading into @data.
     #
     class AbstractMessage
-      attr_accessor :data
+      attr_accessor :data, :created_at
 
       def self.message_id
         raise Exception("AbstractMessage.message_id called - you need to override this in a subclass.")
@@ -687,6 +687,7 @@ end # module OutgoingMessages
       def initialize(socket, server_version)
         raise Exception.new("Don't use AbstractMessage directly; use the subclass for your specific message type") if self.class.name == "AbstractMessage"
         IBLogger.debug(" * loading #{self.class.name}")
+        @created_at = Time.now
 
         @data = Hash.new
         @socket = socket

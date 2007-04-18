@@ -36,7 +36,7 @@ module IB
      {
       :es => Datatypes::Contract.new({
                                        :symbol => "ES",
-                                       :expiry => "200703",
+                                       :expiry => "200703", # <---- Change this date!!
                                        :exchange => "GLOBEX",
                                        :currency => "USD",
                                        :sec_type => Datatypes::Contract::SECURITY_TYPES[:future],
@@ -45,7 +45,7 @@ module IB
                                      }),
       :gbp => Datatypes::Contract.new({
                                        :symbol => "GBP",
-                                       :expiry => "200703",
+                                       :expiry => "200703", # <---- Change this date!!
                                        :exchange => "GLOBEX",
                                        :currency => "USD",
                                        :sec_type => Datatypes::Contract::SECURITY_TYPES[:future],

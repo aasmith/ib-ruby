@@ -27,9 +27,11 @@ module IB
   IBLogger = Logger.new(STDERR) unless defined? IBLogger
 
   module Datatypes
-
+    attr_reader :created_at
+    
     class AbstractDatum
       def init
+        @created_at = Time.now
       end
 
       def initialize(attributeHash=nil)
@@ -111,6 +113,8 @@ module IB
 
       Max_value = 99999999 # I don't know why IB uses a very large number as the default for certain fields
       def init
+        super
+        
         @open_close = "0" 
         @origin = Origin_Customer
         @transmit = true
@@ -238,6 +242,8 @@ module IB
       end
 
       def init
+        super
+        
         @combo_legs = Array.new
         @strike = 0
         @sec_type = ''
@@ -250,6 +256,8 @@ module IB
       attr_accessor :summary, :market_name, :trading_class, :con_id, :min_tick, :multiplier, :price_magnifier, :order_types, :valid_exchanges
 
       def init
+        super
+        
         @summary = Contract.new
         @con_id = 0
         @min_tick = 0
@@ -261,6 +269,8 @@ module IB
       attr_accessor :order_id, :client_id, :exec_id, :time, :account_number, :exchange, :side, :shares, :price, :perm_id, :liquidation
 
       def init
+        super
+        
         @order_id = 0
         @client_id = 0
         @shares = 0
@@ -275,6 +285,8 @@ module IB
       attr_accessor :client_id, :acct_code, :time, :symbol, :sec_type, :exchange, :side
       
       def init
+        super
+        
         @client_id = 0
       end
 
@@ -285,6 +297,8 @@ module IB
       attr_accessor :con_id, :ratio, :action, :exchange, :open_close
 
       def init
+        super
+        
         @con_id = 0
         @ratio = 0
         @open_close = 0
@@ -306,6 +320,8 @@ module IB
                     :coupon_rate_above, :coupon_rate_below, :exclude_convertible, :scanner_setting_pairs, :stock_type_filter
 
       def init
+        super
+        
         @coupon_rate_above = @coupon_rate_below = @market_cap_below = @market_cap_above = @average_option_volume_above = 
           @above_volume = @below_price = @above_price = nil
         @number_of_rows = -1 # none specified, per ScannerSubscription.java
