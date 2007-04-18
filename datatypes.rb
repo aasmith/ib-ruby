@@ -193,17 +193,20 @@ module IB
       
       def right=(x)
         x.upcase! if x.is_a?(String)
-        raise(ArgumentError.new("Invalid right \"#{x}\" (must be one of PUT, CALL, P, C)"))  unless [ "PUT", "CALL", "P", "C"].include?(x)
+        x = nil if x.empty?
+        raise(ArgumentError.new("Invalid right \"#{x}\" (must be one of PUT, CALL, P, C)"))  unless x.nil? || [ "PUT", "CALL", "P", "C"].include?(x)
         @right = x
       end
       
       def expiry=(x)
-        raise(ArgumentError.new("Invalid expiry \"#{x}\" (must be in format YYYYMM)"))  unless x.to_s =~ /^\d\d\d\d\d\d$/
+        x = nil if x.empty?
+        raise(ArgumentError.new("Invalid expiry \"#{x}\" (must be in format YYYYMM or YYYYMMDD)"))  unless x.nil? || x.to_s =~ /^\d\d\d\d\d\d(\d\d)?$/
         @expiry = x.to_s
       end
       
       def sec_type=(x)
-        raise(ArgumentError.new("Invalid security type \"#{x}\" (see SECURITY_TYPES constant in Contract class for valid types)"))  unless SECURITY_TYPES.values.include?(x)
+        x = nil if x.empty?
+        raise(ArgumentError.new("Invalid security type \"#{x}\" (see SECURITY_TYPES constant in Contract class for valid types)"))  unless x.nil? || SECURITY_TYPES.values.include?(x)
         @sec_type = x
       end
 
@@ -267,6 +270,10 @@ module IB
         @sec_type = ''
       end
 
+      def to_human
+        "<Contract: #{symbol} #{expiry} #{strike} #{right} #{exchange} #{currency}>"
+      end
+      
     end # class Contract
 
 

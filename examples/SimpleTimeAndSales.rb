@@ -27,6 +27,9 @@ require 'symbols/futures'
 # First, connect to IB TWS.
 ib = IB::IB.new
 
+# Uncomment this for verbose debug messages:
+# IB::IBLogger.level = Logger::Severity::DEBUG
+
 # Define the symbols we're interested in.
 @market = 
   {
@@ -41,8 +44,13 @@ MIN_SIZE = 0
 
 def showSales(msg)
   return if msg.data[:type] != :last || msg.data[:size] < MIN_SIZE
-  puts @market[msg.data[:ticker_id]].symbol + ": " + msg.data[:size].to_s + " at " + msg.data[:price].to_digits
+  puts @market[msg.data[:ticker_id]].description + ": " + msg.data[:size].to_s + " at " + msg.data[:price].to_digits
 end
+
+def showSize(msg)
+  puts @market[msg.data[:ticker_id]].description + ": " + msg.to_human
+end
+
 
 #
 # Now, subscribe to TickerPrice and TickerSize events.  The code
@@ -60,9 +68,9 @@ ib.subscribe(IB::IncomingMessages::TickPrice, lambda {|msg|
                showSales(msg)
              })
 
-#ib.subscribe(IB::IncomingMessages::TickSize, lambda {|msg|
-#               showSales(msg)
-#             })
+ib.subscribe(IB::IncomingMessages::TickSize, lambda {|msg|
+              showSize(msg)
+             })
 
 
 # Now we actually request market data for the symbols we're interested in.
@@ -76,7 +84,18 @@ ib.subscribe(IB::IncomingMessages::TickPrice, lambda {|msg|
 }
 
          
-puts "Main thread going to sleep. Press ^C to quit.."
-while true
-  sleep 2
-end
+puts "\n\n\t******** Press <Enter> to quit.. *********\n\n"
+
+gets
+
+puts "Unsubscribing from TWS market data.."
+
+@market.each_pair {|id, contract|
+  msg = IB::OutgoingMessages::CancelMarketData.new({
+                                                      :ticker_id => id,
+                                                   })
+  ib.dispatch(msg)
+}
+
+puts "Done."
+

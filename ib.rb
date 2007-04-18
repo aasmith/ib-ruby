@@ -73,6 +73,7 @@ module IB
   class IB
     Tws_client_version = 27
 
+    attr_reader :next_order_id
 
     def initialize(options_in = {})
       @options = {
@@ -81,6 +82,7 @@ module IB
       }.merge(options_in)
 
       @connected = false
+      @next_order_id = nil
       @server = Hash.new # information about server and server connection state
 
       # Message listeners.
@@ -111,6 +113,14 @@ module IB
         :port => "7496"      
       }.merge(options_in)
 
+
+      # Subscribe to the NextValidID message from TWS that is always
+      # sent at connect, and save the id.
+      self.subscribe(IncomingMessages::NextValidID, lambda {|msg|
+                       @next_order_id = msg.data[:order_id]
+                       IBLogger.info { "Got next valid order id #{@next_order_id}." }
+                     })
+      
       @server[:socket] = IBSocket.open(@options[:ip], @options[:port])
       IBLogger.info("* TWS socket connected to #{@options[:ip]}:#{@options[:port]}.")
 
@@ -218,7 +228,7 @@ module IB
         else
           # Warn if nobody listened to a non-error incoming message.
           unless @listeners[msg.class].size > 0
-            IBLogger.warn { " WARNING: Nobody listened to incoming message #{msg.to_human}" }
+            IBLogger.warn { " WARNING: Nobody listened to incoming message #{msg.class}" }
           end      
         end
         

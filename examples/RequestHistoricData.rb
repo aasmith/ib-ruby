@@ -43,7 +43,7 @@ require 'symbols/futures'
 ib = IB::IB.new
 
 # Uncomment this for verbose debug messages:
-#IB::IBLogger.level = Logger::Severity::DEBUG
+# IB::IBLogger.level = Logger::Severity::DEBUG
 
 #
 # Now, subscribe to HistoricalData incoming events.  The code

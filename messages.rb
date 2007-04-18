@@ -65,6 +65,12 @@ module IB
       #
       def send(server)
         self.queue(server).each {|datum|
+
+          # TWS wants to receive booleans as 1 or 0... rewrite as
+          # necessary.
+          datum = "1" if datum == true
+          datum = "0" if datum == false
+          
          server[:socket].syswrite(datum.to_s + "\0")
        }
       end
@@ -266,11 +272,15 @@ module IB
     end # RequestOpenOrders
 
     # Data is { :subscribe => boolean, :account_code => string }
+    #
+    # :account_code is only necessary for advisor accounts. Set it to
+    # empty ('') for a standard account.
+    #
     class RequestAccountData < AbstractMessage
       def self.message_id
         6
       end
-      def send(server)
+      def queue(server)
         queue = [ self.class.message_id,
                   2, # version
                   @data[:subscribe]
@@ -329,7 +339,7 @@ module IB
         9
       end
 
-      def send(server)
+      def queue(server)
         requireVersion(server, 4)
 
         queue = [
@@ -578,7 +588,6 @@ module IB
         20
       end
 
-#      def send(server)
       def queue(server)
         requireVersion(server, 16)
 
@@ -1092,9 +1101,13 @@ end # module OutgoingMessages
       end
 
       def load
-        autoload([:version, :int], [:key, :string], [:val, :string], [:cur, :string])
+        autoload([:version, :int], [:key, :string], [:value, :string], [:currency, :string])
         version_load(2, [:account_name, :string])
       end 
+      
+      def to_human
+        "<AccountValue: acct ##{@data[:account_name]}; #{@data[:key]}=#{@data[:value]} (#{@data[:currency]})>"
+      end
     end # AccountValue
 
     class PortfolioValue < AbstractMessage
@@ -1120,6 +1133,13 @@ end # module OutgoingMessages
         version_load(3, [:average_cost, :decimal], [:unrealized_pnl, :decimal], [:realized_pnl, :decimal])
         version_load(4, [:account_name, :string])
       end
+      
+      def to_human
+        "<PortfolioValue: update for #{@contract.to_human}: market price #{@data[:market_price].to_digits}; market value " +
+          "#{@data[:market_value].to_digits}; position #{@data[:position]}; unrealized PnL #{@data[:unrealized_pnl].to_digits}; " +
+          "realized PnL #{@data[:realized_pnl].to_digits}; account #{@data[:account_name]}>"
+      end
+      
     end # PortfolioValue
 
     class AccountUpdateTime < AbstractMessage
@@ -1133,6 +1153,11 @@ end # module OutgoingMessages
     end # AccountUpdateTime
 
 
+    # 
+    # This message is always sent by TWS automatically at connect.
+    # The IB class subscribes to it automatically and stores the order id in
+    # its :next_order_id attribute.
+    # 
     class NextValidID < AbstractMessage
       def self.message_id
         9
