@@ -558,6 +558,8 @@ module IB
     # 10 = 1 hour
     # 11 = 1 day
     #
+    # Values less than 4 do not appear to work; they are rejected by the server.
+    #
     # The nature of the data extracted is governed by sending a string
     # having a value of "TRADES," "MIDPOINT," "BID," or "ASK." Here,
     # we require a symbol argument of :trades, :midpoint, :bid, or

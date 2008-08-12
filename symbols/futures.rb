@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2006 Blue Voodoo Magic LLC.
-# 
+#
 # This library is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
 # published by the Free Software Foundation; either version 2.1 of the
@@ -32,31 +32,31 @@ require 'datatypes'
 
 module IB
   module Symbols
-    Futures = 
+    Futures =
      {
       :es => Datatypes::Contract.new({
                                        :symbol => "ES",
-                                       :expiry => "200706", # <---- Change this date!!
+                                       :expiry => "200809", # <---- Change this date!!
                                        :exchange => "GLOBEX",
                                        :currency => "USD",
                                        :sec_type => Datatypes::Contract::SECURITY_TYPES[:future],
                                        :multiplier => 50,
                                        :description => "E-Mini S&P 500"
                                      }),
-      
+
       :gbp => Datatypes::Contract.new({
                                        :symbol => "GBP",
-                                       :expiry => "200706", # <---- Change this date!!
+                                       :expiry => "200809", # <---- Change this date!!
                                        :exchange => "GLOBEX",
                                        :currency => "USD",
                                        :sec_type => Datatypes::Contract::SECURITY_TYPES[:future],
                                        :multiplier => 62500,
                                        :description => "British Pounds"
                                      }),
-      
+
       :jpy => Datatypes::Contract.new({
                                        :symbol => "JPY",
-                                       :expiry => "200706", # <---- Change this date!!
+                                       :expiry => "200809", # <---- Change this date!!
                                        :exchange => "GLOBEX",
                                        :currency => "USD",
                                        :sec_type => Datatypes::Contract::SECURITY_TYPES[:future],
@@ -64,6 +64,6 @@ module IB
                                        :description => "Japanese Yen"
                                      })
 
-     } 
+     }
   end
 end
