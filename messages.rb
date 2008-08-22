@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2006 Blue Voodoo Magic LLC.
-# 
+#
 # This library is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
 # published by the Free Software Foundation; either version 2.1 of the
@@ -28,17 +28,17 @@ module IB
 
   class ExtremelyAbstractMessage
     attr_reader :created_at
-    
+
     def to_human
       self.inspect
     end
   end
-  
-  
+
+
   ################################################################
   #### Outgoing messages
   ################################################################
-  
+
   module OutgoingMessages
     EOL = "\0"
 
@@ -54,7 +54,7 @@ module IB
       end # initialize
 
 
-      # This causes the message to send itself over the server socket in server[:socket]. 
+      # This causes the message to send itself over the server socket in server[:socket].
       # "server" is the @server instance variable from the IB object. You can also use this to e.g. get the server version number.
       #
       # Subclasses can either override this method for precise control
@@ -70,18 +70,18 @@ module IB
           # necessary.
           datum = "1" if datum == true
           datum = "0" if datum == false
-          
+
          server[:socket].syswrite(datum.to_s + "\0")
        }
       end
 
       def queue
-        raise Exception("AbstractMessage.queue() called - you need to override this in a subclass.")        
+        raise Exception("AbstractMessage.queue() called - you need to override this in a subclass.")
       end
 
 
       protected
-      
+
       def requireVersion(server, version)
         raise(Exception.new("TWS version >= #{version} required.")) if server[:version] < version
       end
@@ -109,8 +109,8 @@ module IB
 
         queue.concat(@data[:contract].serialize_combo_legs
                      ) if server[:version] >= 8 && @data[:contract].sec_type == "BAG" # I have no idea what "BAG" means. Copied from the Java code.
-        
-        
+
+
         queue
       end # queue
     end # RequestMarketData
@@ -145,7 +145,7 @@ module IB
                 ]
         queue.push(@data[:contract].multiplier) if server[:version] >= 15
         queue.push(@data[:contract].exchange) if server[:version] >= 14
-        queue.push(@data[:contract].currency) 
+        queue.push(@data[:contract].currency)
         queue.push(@data[:contract].local_symbol) if server[:version] >= 2
 
         queue.concat([
@@ -159,7 +159,7 @@ module IB
                       ])
 
         queue.push(@data[:contract].parent_id) if server[:version] >= 4
-        
+
         queue.concat([
                       @data[:order].block_order,
                       @data[:order].sweep_to_fill,
@@ -212,9 +212,9 @@ module IB
 
                       ((server[:version] == 26 && @data[:order].order_type.upcase == "VOL") ? EOL : @data[:order].stock_range_lower),
                       ((server[:version] == 26 && @data[:order].order_type.upcase == "VOL") ? EOL : @data[:order].stock_range_upper),
-                      
+
                      ]) if server[:version] >= 19
-        
+
         queue.push(@data[:order].override_percentage_constraints) if server[:version] >= 22
 
         # Volatility orders
@@ -250,7 +250,7 @@ module IB
       def self.message_id
         4
       end
-      
+
       def queue(server)
         [
          self.class.message_id,
@@ -310,9 +310,9 @@ module IB
                       @data[:filter].symbol,
                       @data[:filter].sec_type,
                       @data[:filter].exchange,
-                      @data[:filter].side                      
+                      @data[:filter].side
                      ]) if server[:version] >= 9
-                  
+
         queue
       end # queue
     end # RequestExecutions
@@ -332,7 +332,7 @@ module IB
       end
     end # RequestIds
 
-    
+
     # data => { :contract => Contract }
     class RequestContractData < AbstractMessage
       def self.message_id
@@ -380,7 +380,7 @@ module IB
         queue.push(@data[:num_rows]) if server[:version] >= 19
 
         queue
-                     
+
       end # queue
     end # RequestMarketDepth
 
@@ -514,7 +514,7 @@ module IB
       end
     end # ReplaceFA
 
-    # data = { :ticker_id => int, 
+    # data = { :ticker_id => int,
     #          :contract => Contract,
     #          :end_date_time => string,
     #          :duration => string, # this specifies an integer number of seconds
@@ -526,9 +526,22 @@ module IB
     #
     # Note that as of 4/07 there is no historical data available for forex spot.
     #
-    # See
-    # http://chuckcaplan.com/twsapi/index.php/void%20reqIntradayData%28%29
-    # , whence the following has been adapted:
+    # data[:contract] may either be a Contract object or a String. A String should be in serialize_ib_ruby format;
+    # that is, it should be a colon-delimited string in the format:
+    #
+    #    symbol:security_type:expiry:strike:right:multiplier:exchange:primary_exchange:currency:local_symbol
+    #
+    # Fields not needed for a particular security should be left blank (e.g. strike and right are only relevant for options.)
+    #
+    # For example, to query the British pound futures contract trading on Globex expiring in September, 2008,
+    # the correct string is:
+    #
+    #    GBP:FUT:200809:::62500:GLOBEX::USD:
+    #
+    # A Contract object will be automatically serialized into the required format.
+    #
+    # See also http://chuckcaplan.com/twsapi/index.php/void%20reqIntradayData%28%29
+    # for general information about how TWS handles historic data requests, whence the following has been adapted:
     #
     # The server providing historical prices appears to not always be
     # available outside of market hours. If you call it outside of its
@@ -584,7 +597,7 @@ module IB
     # [This message does not appear to exist anymore as of 4/07.]
 
     ALLOWED_HISTORICAL_TYPES = [:trades, :midpoint, :bid, :ask]
-    
+
     class RequestHistoricalData < AbstractMessage
       def self.message_id
         20
@@ -594,18 +607,19 @@ module IB
         requireVersion(server, 16)
 
         if @data.has_key?(:what_to_show) && @data[:what_to_show].is_a?(String)
-          @data[:what_to_show].downcase! 
+          @data[:what_to_show].downcase!
           @data[:what_to_show] = @data[:what_to_show].to_sym
         end
-        
+
         raise ArgumentError("RequestHistoricalData: @data[:what_to_show] must be one of #{ALLOWED_HISTORICAL_TYPES.inspect}.") unless ALLOWED_HISTORICAL_TYPES.include?(@data[:what_to_show])
-        
+
         queue = [ self.class.message_id,
                   3, # version
                   @data[:ticker_id]
                 ]
 
-        queue.concat(@data[:contract].serialize_long(server[:version]))
+        contract = @data[:contract].is_a?(Datatypes::Contract) ? @data[:contract] : Datatypes::Contract.from_ib_ruby(@data[:contract])
+        queue.concat(contract.serialize_long(server[:version]))
 
         queue.concat([
                       @data[:end_date_time],
@@ -621,8 +635,8 @@ module IB
 
         queue.push(@data[:format_date]) if server[:version] > 16
 
-        if @data[:contract].sec_type.upcase == "BAG"
-          queue.concat(@data[:contract].serialize_combo_legs)
+        if contract.sec_type.upcase == "BAG"
+          queue.concat(contract.serialize_combo_legs)
         end
 
         queue
@@ -694,10 +708,10 @@ module IB
          @data[:subscription].exclude_convertible,
          (server[:version] >= 25 ? [ @data[:subscription].average_option_volume_above,
                                      @data[:subscription].scanner_setting_pairs ] : []),
-         
+
          (server[:version] >= 27 ? [ @data[:subscription].stock_type_filter ] : []),
         ].flatten
-        
+
       end
     end # RequestScannerSubscription
 
@@ -706,7 +720,7 @@ module IB
     class CancelScannerSubscription
       def self.message_id
         23
-      end 
+      end
 
       def queue(server)
         requireVersion(server, 24)
@@ -770,7 +784,7 @@ end # module OutgoingMessages
     # @@message_id - integer message id.
     #
     # Instance attributes:
-    # :data - Hash of actual data read from a stream. 
+    # :data - Hash of actual data read from a stream.
     #
     # Override the load(socket) method in your subclass to do actual reading into @data.
     #
@@ -794,7 +808,7 @@ end # module OutgoingMessages
         self.load()
 
         @socket = nil
-        
+
 
         IBLogger.debug(" * New #{self.class.name}: #{ self.to_human }")
       end
@@ -825,9 +839,9 @@ end # module OutgoingMessages
 
       # version_load loads map only if @data[:version] is >= required_version.
       def version_load(required_version, *map)
-        if @data[:version] >= required_version 
+        if @data[:version] >= required_version
           map.each {|item|
-            autoload(item) 
+            autoload(item)
           }
         end
       end
@@ -836,7 +850,7 @@ end # module OutgoingMessages
 
 
     ### Actual message classes
-    
+
     # The IB code seems to dispatch up to two wrapped objects for this message, a tickPrice
     # and sometimes a tickSize, which seems to be identical to the TICK_SIZE object.
     #
@@ -875,7 +889,7 @@ end # module OutgoingMessages
     # should be corrected in a similar way as described above if this
     # is important to you."
     #
-    
+
     class TickPrice < AbstractMessage
       def self.message_id
         1
@@ -883,10 +897,10 @@ end # module OutgoingMessages
 
       def load
         autoload([:version, :int], [:ticker_id, :int], [:tick_type, :int], [:price, :decimal])
-        
+
         version_load(2, [:size, :int])
         version_load(3, [:can_auto_execute, :int])
-        
+
         if @data[:version] >= 2
           # the IB code translates these into 0, 3, and 5, respectively, and wraps them in a TICK_SIZE-type wrapper.
           @data[:type] = case @data[:tick_type]
@@ -908,11 +922,11 @@ end # module OutgoingMessages
         end
 
       end # load
-      
+
       def inspect
         "Tick (" + @data[:type].to_s + " at "  + @data[:price].to_digits + ") " + super.inspect
       end
-      
+
       def to_human
         @data[:size].to_s + " " + @data[:type].to_s + " at " + @data[:price].to_digits
       end
@@ -941,7 +955,7 @@ end # module OutgoingMessages
                          nil
                        end
       end
-      
+
       def to_human
         @data[:type].to_s + " size: " +  @data[:size].to_s
       end
@@ -970,7 +984,11 @@ end # module OutgoingMessages
       def self.message_id
         4
       end
-      
+
+      def code
+        @data && @data[:code]
+      end
+
       def load
         @data[:version] = @socket.read_int
 
@@ -1105,8 +1123,8 @@ end # module OutgoingMessages
       def load
         autoload([:version, :int], [:key, :string], [:value, :string], [:currency, :string])
         version_load(2, [:account_name, :string])
-      end 
-      
+      end
+
       def to_human
         "<AccountValue: acct ##{@data[:account_name]}; #{@data[:key]}=#{@data[:value]} (#{@data[:currency]})>"
       end
@@ -1135,13 +1153,13 @@ end # module OutgoingMessages
         version_load(3, [:average_cost, :decimal], [:unrealized_pnl, :decimal], [:realized_pnl, :decimal])
         version_load(4, [:account_name, :string])
       end
-      
+
       def to_human
         "<PortfolioValue: update for #{@contract.to_human}: market price #{@data[:market_price].to_digits}; market value " +
           "#{@data[:market_value].to_digits}; position #{@data[:position]}; unrealized PnL #{@data[:unrealized_pnl].to_digits}; " +
           "realized PnL #{@data[:realized_pnl].to_digits}; account #{@data[:account_name]}>"
       end
-      
+
     end # PortfolioValue
 
     class AccountUpdateTime < AbstractMessage
@@ -1155,30 +1173,30 @@ end # module OutgoingMessages
     end # AccountUpdateTime
 
 
-    # 
+    #
     # This message is always sent by TWS automatically at connect.
     # The IB class subscribes to it automatically and stores the order id in
     # its :next_order_id attribute.
-    # 
+    #
     class NextValidID < AbstractMessage
       def self.message_id
         9
       end
-      
+
       def load
         autoload([:version, :int], [:order_id, :int])
       end
-      
+
     end # NextValidIDMessage
 
-    
+
     class ContractData < AbstractMessage
       attr_accessor :contract_details
 
       def self.message_id
         10
       end
-      
+
       def load
         @contract_details = Datatypes::ContractDetails.new
 
@@ -1201,7 +1219,7 @@ end # module OutgoingMessages
         @contract_details.order_types = @socket.read_string
         @contract_details.valid_exchanges = @socket.read_string
         @contract_details.price_magnifier = @socket.read_int if @data[:version] >= 2
-        
+
       end
     end # ContractData
 
@@ -1317,12 +1335,12 @@ end # module OutgoingMessages
             :wap => @socket.read_decimal,
             :has_gaps => @socket.read_string
           }
-          
+
           Datatypes::Bar.new(attrs)
         }
 
       end
-      
+
       def to_human
         "<HistoricalData: req id #{@data[:req_id]}, #{@data[:item_count]} items, from #{@data[:start_date_str]} to #{@data[:end_date_str]}>"
       end
@@ -1357,7 +1375,7 @@ end # module OutgoingMessages
         @contract_details.min_tick = @socket.read_decimal
         @contract_details.order_types = @socket.read_string
         @contract_details.valid_exchanges = @socket.read_string
-        
+
       end
     end # BondContractData
 

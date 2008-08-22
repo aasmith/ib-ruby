@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2006 Blue Voodoo Magic LLC.
-# 
+#
 # This library is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
 # published by the Free Software Foundation; either version 2.1 of the
@@ -40,8 +40,8 @@ module IB
 
   TWS_IP_ADDRESS = "127.0.0.1"
   TWS_PORT = "7496"
-  
-  
+
+
   class IBSocket < TCPSocket
 
     # send nice null terminated binary data
@@ -65,7 +65,7 @@ module IB
     def read_decimal
       self.read_string.to_d
     end
-    
+
   end # class IBSocket
 
 
@@ -110,7 +110,7 @@ module IB
 
       opts = {
         :ip => "127.0.0.1",
-        :port => "7496"      
+        :port => "7496"
       }.merge(options_in)
 
 
@@ -120,7 +120,7 @@ module IB
                        @next_order_id = msg.data[:order_id]
                        IBLogger.info { "Got next valid order id #{@next_order_id}." }
                      })
-      
+
       @server[:socket] = IBSocket.open(@options[:ip], @options[:port])
       IBLogger.info("* TWS socket connected to #{@options[:ip]}:#{@options[:port]}.")
 
@@ -139,7 +139,7 @@ module IB
         @server[:remote_connect_time] = @server[:socket].read_string
         IBLogger.debug("\tServer connect time: #{@server[:remote_connect_time]}.")
       end
-      
+
       # Server version >= 3 wants an arbitrary client ID at this point. This can be used
       # to identify subsequent communications.
       if @server[:version] >= 3
@@ -182,17 +182,17 @@ module IB
       raise(Exception.new("Invalid argument type (#{messageClass}, #{code.class}) - " +
                           " must be (IncomingMessages::AbstractMessage, Proc)")) unless
         messageClass <= IncomingMessages::AbstractMessage && code.is_a?(Proc)
-      
+
       @listeners[messageClass].push(code)
-    end 
+    end
 
 
 
     # Send an outgoing message.
     def dispatch(message)
-      raise Exception.new("dispatch() must be given an OutgoingMessages::AbstractMessage subclass") unless 
+      raise Exception.new("dispatch() must be given an OutgoingMessages::AbstractMessage subclass") unless
         message.is_a?(OutgoingMessages::AbstractMessage)
-      
+
       IBLogger.info("Sending message " + message.inspect)
       message.send(@server)
     end
@@ -209,7 +209,7 @@ module IB
         IBLogger.debug {
           "Reader: got message id #{msg_id}.\n"
         }
-        
+
         # create a new instance of the appropriate message type, and have it read the message.
         msg = IncomingMessages::Table[msg_id].new(@server[:socket], @server[:version])
 
@@ -218,23 +218,28 @@ module IB
         }
 
         IBLogger.debug {
-          " Listeners: " + @listeners.inspect + " inclusion: #{ @listeners.include?(msg.class)}" 
+          " Listeners: " + @listeners.inspect + " inclusion: #{ @listeners.include?(msg.class)}"
         }
 
-        
+
         # Log the message if it's an error.
+        # Make an exception for the "successfully connected" messages, which, for some reason, come back from IB as errors.
         if msg.is_a?(IncomingMessages::Error)
-          IBLogger.error(msg.to_human)
+          if msg.code == 2104 || msg.code == 2106 # connect strings
+            IBLogger.info(msg.to_human)
+          else
+            IBLogger.error(msg.to_human)
+          end
         else
           # Warn if nobody listened to a non-error incoming message.
           unless @listeners[msg.class].size > 0
             IBLogger.warn { " WARNING: Nobody listened to incoming message #{msg.class}" }
-          end      
+          end
         end
-        
-        
+
+
         # IBLogger.debug("Reader done with message id #{msg_id}.")
-        
+
 
       end # while
 

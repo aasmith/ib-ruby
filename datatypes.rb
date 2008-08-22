@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2006 Blue Voodoo Magic LLC.
-# 
+#
 # This library is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
 # published by the Free Software Foundation; either version 2.1 of the
@@ -28,7 +28,7 @@ module IB
 
   module Datatypes
     attr_reader :created_at
-    
+
     class AbstractDatum
       def init
         @created_at = Time.now
@@ -52,19 +52,19 @@ module IB
       end
     end # AbstractDatum
 
-    
+
     # This is used within HistoricData messages.
     # Instantiate with a Hash of attributes, to be auto-set via initialize in AbstractDatum.
     class Bar < AbstractDatum
       attr_accessor :date, :open, :high, :low, :close, :volume, :wap, :has_gaps
-      
+
       def to_s
         "<Bar: #{@date}; OHLC: #{@open.to_digits}, #{@high.to_digits}, #{@low.to_digits}, #{@close.to_digits}; volume: #{@volume}; wap: #{@wap.to_digits}; has_gaps: #{@has_gaps}>"
       end
-      
+
     end # Bar
-    
-    
+
+
     class Order < AbstractDatum
       # Constants used in Order objects. Drawn from Order.java
       Origin_Customer = 0
@@ -81,9 +81,9 @@ module IB
       # Main order fields
       attr_accessor(:id, :client_id, :perm_id, :action, :total_quantity, :order_type, :limit_price,
                     :aux_price, :shares_allocation)
-      
+
       # Extended order fields
-      attr_accessor(:tif, :oca_group, :account, :open_close, :origin, :order_ref, 
+      attr_accessor(:tif, :oca_group, :account, :open_close, :origin, :order_ref,
                     :transmit,   # if false, order will be created but not transmitted.
                     :parent_id,  # Parent order id, to associate auto STP or TRAIL orders with the original order.
                     :block_order,
@@ -132,8 +132,8 @@ module IB
       Max_value = 99999999 # I don't know why IB uses a very large number as the default for certain fields
       def init
         super
-        
-        @open_close = "0" 
+
+        @open_close = "0"
         @origin = Origin_Customer
         @transmit = true
         @primary_exchange = ''
@@ -148,7 +148,7 @@ module IB
         @delta_neutral_aux_price = Max_value
         @reference_price_type = Max_value
       end # init
-      
+
     end # class Order
 
 
@@ -168,42 +168,42 @@ module IB
 
       # note that the :description field is entirely local to ib-ruby, and not part of TWS.
       # You can use it to store whatever arbitrary data you want.
-      
+
       attr_accessor(:symbol, :strike, :multiplier, :exchange, :currency,
                     :local_symbol, :combo_legs, :description)
 
       # Bond values
       attr_accessor(:cusip, :ratings, :desc_append, :bond_type, :coupon_type, :callable, :puttable,
                     :coupon, :convertible, :maturity, :issue_date)
-      
+
       attr_reader :sec_type, :expiry, :right, :primary_exchange
-      
-      
-      
+
+
+
       # some protective filters
-      
+
       def primary_exchange=(x)
         x.upcase! if x.is_a?(String)
 
         # per http://chuckcaplan.com/twsapi/index.php/Class%20Contract
-        raise(ArgumentError.new("Don't set primary_exchange to smart")) if x == "SMART" 
-        
+        raise(ArgumentError.new("Don't set primary_exchange to smart")) if x == "SMART"
+
         @primary_exchange = x
       end
-      
+
       def right=(x)
         x.upcase! if x.is_a?(String)
         x = nil if x.empty?
         raise(ArgumentError.new("Invalid right \"#{x}\" (must be one of PUT, CALL, P, C)"))  unless x.nil? || [ "PUT", "CALL", "P", "C"].include?(x)
         @right = x
       end
-      
+
       def expiry=(x)
         x = nil if x.empty?
         raise(ArgumentError.new("Invalid expiry \"#{x}\" (must be in format YYYYMM or YYYYMMDD)"))  unless x.nil? || x.to_s =~ /^\d\d\d\d\d\d(\d\d)?$/
         @expiry = x.to_s
       end
-      
+
       def sec_type=(x)
         x = nil if x.empty?
         raise(ArgumentError.new("Invalid security type \"#{x}\" (see SECURITY_TYPES constant in Contract class for valid types)"))  unless x.nil? || SECURITY_TYPES.values.include?(x)
@@ -213,7 +213,7 @@ module IB
       def reset
         @combo_legs = Array.new
         @strike = 0
-      end      
+      end
 
       # Different messages serialize contracts differently. Go figure.
       def serialize_short(version)
@@ -249,9 +249,35 @@ module IB
         queue.push(self.primary_exchange) if version >= 14
         queue.push(self.currency)
         queue.push(self.local_symbol) if version >= 2
-        
+
         queue
       end # serialize_long
+
+      #
+      # This produces a string uniquely identifying this contract, in the format used
+      # for command line arguments in the IB-Ruby examples. The format is:
+      #
+      #    symbol:security_type:expiry:strike:right:multiplier:exchange:primary_exchange:currency:local_symbol
+      #
+      # Fields not needed for a particular security should be left blank (e.g. strike and right are only relevant for options.)
+      #
+      # For example, to query the British pound futures contract trading on Globex expiring in September, 2008,
+      # the string is:
+      #
+      #    GBP:FUT:200809:::62500:GLOBEX::USD:
+      #
+
+      def serialize_ib_ruby(version)
+        serialize_long(version).join(":")
+      end
+
+      # This returns a Contract initialized from the serialize_ib_ruby format string.
+      def self.from_ib_ruby(string)
+        c = Contract.new
+        c.symbol, c.sec_type, c.expiry, c.strike, c.right, c.multiplier, c.exchange, c.primary_exchange, c.currency, c.local_symbol = string.split(":")
+
+        c
+      end
 
       # Some messages send open_close too, some don't. WTF.
       def serialize_combo_legs(include_open_close = false)
@@ -259,12 +285,12 @@ module IB
           [0]
         else
           [ self.combo_legs.size ].concat(self.combo_legs.serialize(include_open_close))
-        end     
+        end
       end
 
       def init
         super
-        
+
         @combo_legs = Array.new
         @strike = 0
         @sec_type = ''
@@ -273,7 +299,11 @@ module IB
       def to_human
         "<Contract: #{symbol} #{expiry} #{strike} #{right} #{exchange} #{currency}>"
       end
-      
+
+      def to_short
+        "#{symbol}#{expiry}#{strike}#{right}#{exchange}#{currency}"
+      end
+
     end # class Contract
 
 
@@ -282,7 +312,7 @@ module IB
 
       def init
         super
-        
+
         @summary = Contract.new
         @con_id = 0
         @min_tick = 0
@@ -295,23 +325,23 @@ module IB
 
       def init
         super
-        
+
         @order_id = 0
         @client_id = 0
         @shares = 0
         @price = 0
         @perm_id = 0
-        @liquidation =0 
+        @liquidation =0
       end
     end # Execution
 
     # EClientSocket.java tells us: 'Note that the valid format for m_time is "yyyymmdd-hh:mm:ss"'
     class ExecutionFilter < AbstractDatum
       attr_accessor :client_id, :acct_code, :time, :symbol, :sec_type, :exchange, :side
-      
+
       def init
         super
-        
+
         @client_id = 0
       end
 
@@ -323,7 +353,7 @@ module IB
 
       def init
         super
-        
+
         @con_id = 0
         @ratio = 0
         @open_close = 0
@@ -346,8 +376,8 @@ module IB
 
       def init
         super
-        
-        @coupon_rate_above = @coupon_rate_below = @market_cap_below = @market_cap_above = @average_option_volume_above = 
+
+        @coupon_rate_above = @coupon_rate_below = @market_cap_below = @market_cap_above = @average_option_volume_above =
           @above_volume = @below_price = @above_price = nil
         @number_of_rows = -1 # none specified, per ScannerSubscription.java
       end

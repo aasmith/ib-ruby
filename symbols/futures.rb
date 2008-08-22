@@ -53,7 +53,15 @@ module IB
                                        :multiplier => 62500,
                                        :description => "British Pounds"
                                      }),
-
+      :eur => Datatypes::Contract.new({
+                                       :symbol => "EUR",
+                                       :expiry => "200809", # <---- Change this date!!
+                                       :exchange => "GLOBEX",
+                                       :currency => "USD",
+                                       :sec_type => Datatypes::Contract::SECURITY_TYPES[:future],
+                                       :multiplier => 12500,
+                                       :description => "Euro FX"
+                                     }),
       :jpy => Datatypes::Contract.new({
                                        :symbol => "JPY",
                                        :expiry => "200809", # <---- Change this date!!
@@ -62,8 +70,16 @@ module IB
                                        :sec_type => Datatypes::Contract::SECURITY_TYPES[:future],
                                        :multiplier => 12500000,
                                        :description => "Japanese Yen"
+                                     }),
+      :hsi => Datatypes::Contract.new({
+                                       :symbol => "HSI",
+                                       :expiry => "200808", # <---- Change this date!!
+                                       :exchange => "HKFE",
+                                       :currency => "HKD",
+                                       :sec_type => Datatypes::Contract::SECURITY_TYPES[:future],
+                                       :multiplier => 50,
+                                       :description => "Hang Seng Index"
                                      })
-
-     }
+    }
   end
 end
