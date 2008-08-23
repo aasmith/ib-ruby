@@ -79,7 +79,7 @@ if opt["help"] || opt["security"].nil? || opt["security"].empty?
 
  >>         YOUR USE OF THIS PROGRAM IS ENTIRELY AT YOUR OWN RISK.                <<
  >> IT MAY CONTAIN POTENTIALLY COSTLY BUGS, ERRORS, ETC., BOTH KNOWN AND UNKNOWN. <<
-
+ >> DO NOT USE THIS SOFTWARE IF YOU ARE UNWILLING TO ACCEPT ALL RISK IN DOING SO. <<
 
 ************************************************************************************
 
@@ -114,12 +114,11 @@ Options:
 
 
 --duration is how much historic data we want, in seconds, before --end's time.
-  The default is 3600 (seconds, 1 hour.)
+  The default is 86400 (seconds, which is 1 day.)
   The TWS-imposed limit is 86400 (1 day per request.) Requests for more than 86400 seconds worth of historic data will fail.
 
 --what determines what the data will be comprised of. This can be "trades", "midpoint", "bid", or "asked".
   The default is "trades".
-
 
 --barsize determines how long each bar will be.
 
@@ -137,7 +136,7 @@ Possible values (from the IB documentation):
  10 = 1 hour
  11 = 1 day
 
- Values less than 4 do not appear to actually work; they are rejected by the server.
+ Values less than 4 do not appear to actually work; they are rejected by the server. (Maybe they only work on certain securities?)
  The default is 8, 15 minutes.
 
 --nonregularhours :
@@ -165,7 +164,7 @@ Possible values (from the IB documentation):
  data in CSV format.
 
 ENDHELP
-#' <- fix broken syntax highlighting
+#' <- fix broken syntax highlighting in Aquamacs
   exit
 
 end
@@ -174,7 +173,7 @@ end
 
 # DURATION is how much historic data we want, in seconds, before END_DATE_TIME.
 # (The 'duration' gem gives us methods like #hour on integers.)
-DURATION = (opt["duration"] && opt["duration"].to_i) || 1.hour
+DURATION = (opt["duration"] && opt["duration"].to_i) || 1.day
 
 if DURATION > 86400
   STDERR.puts("\nTWS does not accept a --duration longer than 86400 seconds (1 day.) Please try again with a smaller duration.\n\n")
